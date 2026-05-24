@@ -1,0 +1,22 @@
+I think we can say in it's simplest form, SQLAlquemy is a tool that helps you to handleSQL databases
+without worrying about the syntax of each specifc databe framework.It handles the commands from you,
+translating the python syntax into SQL commands.
+
+It's separated into two main branches; core and ORM. Core is the base of the library and it mainly 
+handles the communication between python and the database and the translation. For that purpose we use
+create.engine(). It handles mainly the connection and communication between the code and the databse. 
+And for SQLAlquemy core, we also use MetaData. Being honest, I am not a hundred percent sure what it
+does for now, I hope the understanding improves after using it. But it stores and remembers the 
+information of each table and how to handles it. 
+
+That's for the core library. Although SQLAlquemy true potential is on ORM. Object Relational Mapping 
+is the way developers have solved the issue of persisting Objects. It is hard to store them on a 
+databse manually and overall is a headacke. ORM in SQLAlquemy handles most of the tedious process of
+storing the Objects and their instances and allows you to persist, store and organize them in a 
+convinient way.
+
+We have the basic CRUD actions to manipulate a db using the core functions. We use .insert(), .select(),
+.update(), .delete(). It's easy to handle and manipulate. And we runn it using the connection of the 
+engine and running the .execute() function. However, is key to notice every change there would be 
+temporal if we don't commit it. .commit() serves that function. We can make changes that remain on 
+memory but won't persists until we commit them.
