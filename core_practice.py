@@ -8,8 +8,8 @@ minions = Table(
     "minions",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("name", String, nullable=False),
-    Column("num_eyes", Integer, CheckConstraint("num_eyes IN (1,2)"), nullable=False),
+    Column("name", String, nullable=False, unique=True),
+    Column("num_eyes", Integer, CheckConstraint("num_eyes IN (1,2)")),
     Column("hairstyle", String)
 )
 
@@ -17,9 +17,9 @@ weapons = Table(
     "weapons",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("name", String),
-    Column("hazard_level", Integer, CheckConstraint("hazard_level BETWEEN 1 AND 10")),
-    Column("minion_id", Integer, ForeignKey(minions.c.id))
+    Column("name", String, nullable=False),
+    Column("hazard_level", Integer, CheckConstraint("hazard_level BETWEEN 1 AND 10"), nullable=False),
+    Column("minion_id", Integer, ForeignKey(minions.c.id), nullable=False)
 )
 
 metadata.create_all(engine)
@@ -36,8 +36,8 @@ def weapon_info():
             print("Invalid hazard level, try again.\n")
         else:
             assigned = input("Name of the assigned minion to the weapon\n> ")
-            value = minion_id(assigned)
-            data = [name, haz_lv, value]
+            m_id = minion_id(assigned)
+            data = [name, haz_lv, m_id]
             return data
         
 def get_minion_name():
@@ -58,19 +58,33 @@ def execute(funct):
 def add_minion(name, eyes, hairstyle):
     execute(insert(minions).values(name=name, num_eyes=eyes, hairstyle=hairstyle))
 
-def read_all_minions():
-        result = execute(select(minions).join(weapons).where(minions.c.id == weapons.c.minion_id))
+def read_minion_weapon():
+        result = execute(
+            select(
+                minions.c.name.label("minion_name"),
+                weapons.c.name.label("weapon_name")
+                ).join(weapons, minions.c.id == weapons.c.minion_id))
         for row in result:
             print(dict(row._mapping))
 
 def read_by_minion(name):
-        result = execute(select(minions, weapons).join(weapons, minions.c.id == weapons.c.minion_id).where(minions.c.name == name))
+        result = execute(
+            select(
+                minions.c.name.label("minion_name"),
+                weapons.c.name.label("weapon_name"),
+                weapons.c.hazard_level
+                ).join(weapons, minions.c.id == weapons.c.minion_id).where(minions.c.name == name))
         for row in result:
             print(dict(row._mapping))
 
 
 def read_by_weapon(name):
-    result = execute(select(weapons, minions.c.name).join(minions, weapons.c.minion_id == minions.c.id).where(weapons.c.name == name))
+    result = execute(
+        select(
+        weapons.c.name.label("weapon_name"),
+        weapons.c.hazard_level, 
+        minions.c.name.label("minion_name")
+        ).join(minions, weapons.c.minion_id == minions.c.id).where(weapons.c.name == name))
     for row in result:
             print(dict(row._mapping))
 
@@ -86,8 +100,11 @@ def ask_id():
     data = int(input("User's id\n> "))
     return data
 
-def delete_by_id(id):
-    execute(delete(minions).where(minions.c.id == id))
+def delete_weapon_and_minion(id):
+    execute(
+        delete(weapons).where(weapons.c.minion_id == id),
+        delete(minions).where(minions.c.id == id)
+        )
 
 def add_menu():
     while True:
@@ -99,7 +116,7 @@ def add_menu():
         
 def read_menu():
     while True:
-        choice = int(input("1 = All minions\n2 = Read by minion\n3 = Read by weapon\n> "))
+        choice = int(input("1 = All\n2 = Read by minion\n3 = Read by weapon\n> "))
         if choice not in (1,2,3):
              print("invalid option, try again\n")
         else:
@@ -120,7 +137,7 @@ while True:
     elif choice == 2:
         read_choice = read_menu()
         if read_choice == 1:
-            read_all_minions()
+            read_minion_weapon()
         elif read_choice == 2:
             name = get_minion_name()
             read_by_minion(name)
@@ -128,7 +145,8 @@ while True:
             name = get_weapon_name()
             read_by_weapon(name)     
     elif choice == 3:
-        data = ask_id()
-        delete_by_id(data)
+        name = get_minion_name()
+        m_id = minion_id(name)
+        delete_weapon_and_minion(m_id)
     else:
         break
