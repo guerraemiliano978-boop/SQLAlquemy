@@ -30,15 +30,15 @@ class CLI:
     
     def get_order_price(self):
         order = self.register.get_ticket_items_list()
-        #total = self.register.calc_total()
+        total = self.register.calc_total()
         for d in order:
             print(d)
-        #print(f"Total: ${total}")
-        #return total
+        print(f"Total: ${total}")
+        return total
     
     def return_change(self, total, payment):
         change = self.register.calc_change(total, payment)
-        print(f"The customer exchange is ${change}")
+        print(f"The customer exchange is ${change:.2f}")
 
     def new_order(self):
         self.register.clear_all()
@@ -51,7 +51,7 @@ class CLI:
                 break
         total = self.get_order_price()
         payment = float(input("\nCustomer's payment amount\n> "))
-        #self.return_change(total, payment)
+        self.return_change(total, payment)
 
         print("\nTell the customer to come back soon Squidward!!\n")
 

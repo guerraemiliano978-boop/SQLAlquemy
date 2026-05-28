@@ -26,6 +26,7 @@ class Register:
             stmt = insert(ticket).values(customer_name=cx_name)
             result = conn.execute(stmt)
             self.current_ticket_id = result.inserted_primary_key[0]
+            #print(f"for debbuging, ticket id {self.current_ticket_id}")
             return self.current_ticket_id
     
     def update_items_quantity(self, data):
@@ -60,7 +61,9 @@ class Register:
                           ticket_items.c.quantity
                           ).select_from(
                               ticket_items.join(
-                                  menu, menu.c.id == ticket_items.c.item_id))
+                                  menu, ticket_items.c.item_id == menu.c.id)).where(
+                                      ticket_items.c.ticket_id == self.current_ticket_id
+                                  )
             result = conn.execute(stmt)
             self.current_order = [dict(row._mapping) for row in result]
             return self.current_order
@@ -68,8 +71,8 @@ class Register:
     def calc_total(self):
         total = 0
         for d in self.current_order:
-            price = d.get(price)
-            quantity = d.get(quantity)
+            price = d.get("price")
+            quantity = d.get("quantity")
             total += price*quantity
         return total
     
