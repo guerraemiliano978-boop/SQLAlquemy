@@ -10,6 +10,13 @@ class CLI:
             3: "kelp shake",
             4: "kelp fries"
         }
+    
+    def verify_input(self, funct):
+        while True:
+            try:
+                return funct()
+            except ValueError:
+                print("\nInavalid value, please use a number\n")
 
     def create_ticket(self):
         print("\nWe will create a new ticket!\n")
@@ -17,15 +24,15 @@ class CLI:
         return self.register.create_ticket(customer)
     
     def get_items_quantity(self):
-        print("\nWhat does the customer wants to order?\n")
-        choice = int(input("1 = krabby patty\n2 = double krabby patty\n3 = kelp shake\n4 = kelp fries\n> "))
+        print("\nWhat does the customer want to order?\n")
+        choice = self.verify_input(lambda: int(input("1 = krabby patty\n2 = double krabby patty\n3 = kelp shake\n4 = kelp fries\n> ")))
         item = self.items_list.get(choice)
-        print("\nHow many does the customer wants to order?\n")
-        quantity = int(input("Insert the amount\n> "))
+        print("\nHow many does the customer want to order?\n")
+        quantity = self.verify_input(lambda: int(input("Insert the amount\n> ")))
         return (item, quantity)
     
     def insert_row(self, data: tuple):
-        register.parse_item_quantity(data)
+        self.register.parse_item_quantity(data)
         return self.register.add_ticket_item_row()
     
     def get_order_price(self):
@@ -36,12 +43,18 @@ class CLI:
         print(f"Total: ${total:.2f}")
         return total
     
-    def return_change(self, total, payment):
-        change = self.register.calc_change(total, payment)
-        print(f"The customer exchange is ${change:.2f}")
+    def end_transaction(self, total, payment):
+        valid_transaction = self.register.validate_transaction(total, payment)
+        if valid_transaction == True:
+            change = self.register.calc_change(total, payment)
+            print(f"The customer's exchange is ${change:.2f}")
+            self.commit_order()
+            print("\nTell the customer to come back soon Squidward!!\n")
+        else:
+            print("\nNot enough money!! No krabby patties for this customer!")
 
     def commit_order(self):
-        register.commit_order()
+        self.register.commit_order()
 
     def new_order(self):
         self.register.clear_all()
@@ -53,11 +66,8 @@ class CLI:
             if cont == "y":
                 break
         total = self.get_order_price()
-        payment = float(input("\nCustomer's payment amount\n> "))
-        self.return_change(total, payment)
-        self.commit_order()
-
-        print("\nTell the customer to come back soon Squidward!!\n")
+        payment = self.verify_input(lambda: float(input("\nCustomer's payment amount\n> ")))
+        self.end_transaction(total, payment)
 
     def main(self):
         while True:

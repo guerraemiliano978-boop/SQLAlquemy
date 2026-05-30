@@ -1,4 +1,4 @@
-from db import execute, menu, ingredients, recipe, ticket, ticket_items, engine
+from db import menu, ticket, ticket_items, engine
 from sqlalchemy import insert, select
 
 
@@ -10,13 +10,12 @@ class Register:
         self.current_quantity = None
         self.current_order = []
         self.current_receipt_order = []
-
-    
     
     def clear_all(self):
         self.clear_row()
         self.current_ticket_id = None
         self.current_order.clear()
+        self.current_receipt_order.clear()
 
     def clear_row(self):
         self.current_item_id = None
@@ -50,7 +49,6 @@ class Register:
         }
         self.current_order.append(row)
         
-        
         #with engine.begin() as conn:
             #stmt = insert(
                 #ticket_items
@@ -62,6 +60,7 @@ class Register:
             #return result
     
     def get_ticket_items_list(self):
+        self.current_receipt_order.clear()
         receipt_row = {}
         for row in self.current_order:
             quantity = row.get("quantity")
@@ -76,16 +75,12 @@ class Register:
         
         return self.current_receipt_order
 
-
-    
     def get_item_price(self, item_id):
         with engine.connect() as conn:
             stmt = select(menu.c.item, menu.c.price).where(menu.c.id == item_id)
             result = conn.execute(stmt)
             return result.fetchone()        
 
-        
-        
         #with engine.connect() as conn:
             #stmt = select(menu.c.item, 
                           #menu.c.price,
@@ -107,12 +102,15 @@ class Register:
             total += price*quantity
         return total
     
+    def validate_transaction(self, total, payment):
+        if total > payment:
+             return False
+        else:
+             return True
+   
     def calc_change(self, total, payment):
         result = payment - total
-        if result > 0:
-            return result
-        else:
-            False
+        return result
 
     def commit_order(self):
         with engine.begin() as conn:
