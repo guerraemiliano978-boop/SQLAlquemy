@@ -33,12 +33,15 @@ class CLI:
         total = self.register.calc_total()
         for d in order:
             print(d)
-        print(f"Total: ${total}")
+        print(f"Total: ${total:.2f}")
         return total
     
     def return_change(self, total, payment):
         change = self.register.calc_change(total, payment)
         print(f"The customer exchange is ${change:.2f}")
+
+    def commit_order(self):
+        register.commit_order()
 
     def new_order(self):
         self.register.clear_all()
@@ -52,6 +55,7 @@ class CLI:
         total = self.get_order_price()
         payment = float(input("\nCustomer's payment amount\n> "))
         self.return_change(total, payment)
+        self.commit_order()
 
         print("\nTell the customer to come back soon Squidward!!\n")
 
