@@ -48,6 +48,16 @@ class InventoryManagement:
                 conn.execute(
                     update(ingredients).where(
                         ingredients.c.id == ingredient_id).values(stock=ingredients.c.stock - amount))
+    
+    def add_stock(self, data):
+        with engine.begin() as conn:
+            stmt = update(ingredients).where(ingredients.c.id == data[0]).values(stock=ingredients.c.stock + data[1])
+            conn.execute(stmt)
+
+
+
+
+
         
         
                 

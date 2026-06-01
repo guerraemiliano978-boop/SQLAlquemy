@@ -1,5 +1,5 @@
 from db import menu, ticket, ticket_items, engine
-from inventory_managment import InventoryManagement
+from inventory_management import InventoryManagement
 from sqlalchemy import insert, select
 
 
@@ -13,18 +13,10 @@ class Register:
     def clear_all(self):
         self.current_order.clear()
 
-
-    def get_item_id(self, item_name):
-        with engine.connect() as conn:
-            stmt = select(menu.c.id).where(menu.c.item == item_name)
-            result = conn.execute(stmt)
-            return result.scalar()
-
-    def add_row(self, data: tuple):
-        item_id = self.get_item_id(data[0])
+    def add_row(self, item_id, quantity):
         row = {
            "item_id": item_id,
-           "quantity": data[1] 
+           "quantity": quantity 
         }
         self.current_order.append(row)
              
