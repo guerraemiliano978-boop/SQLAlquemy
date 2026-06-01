@@ -1,5 +1,5 @@
 from sales_register import Register
-from inventory_managment import InventoryManagment
+from inventory_managment import InventoryManagement
 
 class CLI:
     def __init__(self, register: Register):
@@ -23,10 +23,7 @@ class CLI:
         customer = input("Customer's name\n> ")
         return customer
     
-    def create_ticket(self, cx_name):
-        return self.register.create_ticket(cx_name)
-    
-    def get_items_quantity(self):
+    def get_item_quantity(self):
         while True:
             print("\nWhat does the customer want to order?\n")
             choice = self.verify_input(lambda: int(input("1 = krabby patty\n2 = double krabby patty\n3 = kelp shake\n4 = kelp fries\n> ")))
@@ -39,14 +36,21 @@ class CLI:
         quantity = self.verify_input(lambda: int(input("Insert the amount\n> ")))
         return (item, quantity)
     
-    def insert_row(self, data: tuple):
-        self.register.parse_item_quantity(data)
-        return self.register.add_ticket_item_row()
+    def send_row(self, data: tuple):
+        return self.register.add_row(data)
     
-    def get_order_price(self):
-        order = self.register.get_ticket_items_list()
-        total = self.register.calc_total()
-        for d in order:
+    def get_order(self):
+        while True:
+            data = self.get_item_quantity()
+            self.send_row(data)
+            cont = input("\nIs the order already complete? (y/n)\n> ").lower()
+            if cont == "y":
+                break
+    
+    def get_order_receipt(self):
+        receipt = self.register.get_receipt()
+        total = self.register.calc_total(receipt)
+        for d in receipt:
             print(d)
         print(f"Total: ${total:.2f}")
         return total
@@ -67,13 +71,8 @@ class CLI:
     def new_order(self):
         self.register.clear_all()
         cx_name = self.get_cx_name()
-        while True:
-            data = self.get_items_quantity()
-            self.insert_row(data)
-            cont = input("\nIs the order already complete? (y/n)\n> ").lower()
-            if cont == "y":
-                break
-        total = self.get_order_price()
+        self.get_order()
+        total = self.get_order_receipt()
         payment = self.verify_input(lambda: float(input("\nCustomer's payment amount\n> ")))
         self.end_transaction(total, payment, cx_name)
 
@@ -86,8 +85,8 @@ class CLI:
 
 
 
-inventory_managment = InventoryManagment()
-register = Register(inventory_managment)
+inventory_management = InventoryManagement()
+register = Register(inventory_management)
 cli = CLI(register)
 cli.main()
 

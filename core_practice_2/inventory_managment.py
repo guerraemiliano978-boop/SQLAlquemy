@@ -2,47 +2,39 @@ from db import engine, recipe, ingredients
 from sqlalchemy import select, update
 
 
-class InventoryManagment:
+class InventoryManagement:
     def __init__(self):
-        self.current_item_id = None
-        self.current_i_quantity = None
-        self.current_changes = {
-        
-        }
+        self.current_changes = {}
 
         
     def validate_order_stock(self, order):
-
         self.current_changes.clear()
         valid_order = True
         for row in order:
-            self.parse_item_quantity(row)
-            recipe_rows = self.get_recipe()
-            valid_order = self.verify_stock(recipe_rows)
+            item_id = row.get("item_id")
+            order_quantity = row.get("quantity")
+            recipe_rows = self.get_recipe(item_id)
+            valid_order = self.verify_stock(recipe_rows, order_quantity)
             if valid_order == False:
                 return False
             
         return True
-
-    def parse_item_quantity(self, row):
-        self.current_item_id= row.get("item_id")
-        self.current_i_quantity = row.get("quantity")
       
-    def get_recipe(self):
+    def get_recipe(self, item_id):
         with engine.connect() as conn:
             stmt = select(
                     recipe.c.ingredient_id,
                     recipe.c.quantity
-                    ).where(recipe.c.item_id == self.current_item_id)
+                    ).where(recipe.c.item_id == item_id)
             return conn.execute(stmt)
     
-    def verify_stock(self, recipe):
+    def verify_stock(self, recipe_rows, order_quantity):
         with engine.connect() as conn:
-            for row in recipe:
+            for row in recipe_rows:
                 result = conn.execute(select(ingredients.c.stock).where(ingredients.c.id == row[0]))
                 stock = result.scalar()
                 previous_amount = self.current_changes.get(row[0], 0)
-                total_amount = previous_amount + row[1]*self.current_i_quantity
+                total_amount = previous_amount + row[1]*order_quantity
                 if total_amount > stock:
                     return False
                 else:
